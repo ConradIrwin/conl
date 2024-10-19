@@ -1,0 +1,9 @@
+[package]
+name = "conl"
+version = "1.0.0"
+
+edition = "2021"
+license = "MIT"
+license-file = "LICENSE.MIT"
+description = "CONL is a post-modern configuration language"
+repository = "https://github.com/ConradIrwin/conl"

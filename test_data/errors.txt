@@ -1,0 +1,87 @@
+ = a
+---
+1: unexpected indent
+
+===
+= a
+ = a
+---
+2: unexpected indent
+
+===
+=
+ =
+= a
+---
+2: missing value
+
+===
+a =
+b = c
+---
+1: missing value
+
+===
+=
+ = a
+␉= a
+---
+3: unexpected indent
+
+===
+a = "o
+---
+1: invalid escape code: "o
+
+===
+a = "{
+---
+1: invalid escape code: unexpected newline
+
+===
+a = "{g}
+---
+1: invalid escape code: "{g}
+
+===
+a = ?
+---
+1: invalid UTF-8
+
+===
+? = a
+---
+1: invalid UTF-8
+
+===
+b = a # ???
+---
+1: invalid UTF-8
+
+===
+b = """bash?
+---
+1: invalid UTF-8
+
+===
+b = """bash
+  ?
+---
+2: invalid UTF-8
+
+===
+b = """bash
+---
+1: missing value
+
+===
+b = a
+= b
+---
+2: expected map key
+
+===
+= a
+a = b
+---
+2: expected list item

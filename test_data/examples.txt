@@ -1,0 +1,76 @@
+a = b
+---
+{"a":"b"}
+
+===
+# test
+---
+{}
+
+===
+a =
+ = 1
+ = 2
+---
+{"a":["1","2"]}
+
+===
+"@ = "@
+---
+{"":""}
+
+===
+a =#b
+  b = c
+---
+{"a":{"b":"c"}}
+
+===
+a = """json #lol
+  {"":""}
+---
+{"a":"{\"\":\"\"}"}
+
+===
+a=b#c = a#c = b#d # hah
+---
+{"a=b#c":"a#c = b#d"}
+
+===
+"_">"\"/ = """="#"{0} wow
+---
+{" \t\r\n":"\"=#\u0000 wow"}
+
+===
+=a
+= b
+---
+["a","b"]
+
+===
+a = """bash
+
+  #!/usr/bin/env bash
+
+  echo "hello world"
+
+---
+{"a":"#!/usr/bin/env bash\n\necho \"hello world\""}
+
+===
+a = """bash
+
+  #!/usr/bin/env bash
+
+  echo "hello world"
+
+b = c
+
+---
+{"a":"#!/usr/bin/env bash\n\necho \"hello world\"","b":"c"}
+
+===
+a = b␊c = d␊
+e = f
+---
+{"a":"b","c":"d","e":"f"}

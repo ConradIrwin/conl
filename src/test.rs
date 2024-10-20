@@ -86,7 +86,7 @@ fn section_to_json<'tok>(
 }
 
 #[test]
-fn test_equvialence() {
+fn test_equivalence() {
     let examples = std::fs::read_to_string("test_data/examples.txt")
         .unwrap()
         .replace("␉", "\t")

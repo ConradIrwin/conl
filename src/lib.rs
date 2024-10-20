@@ -278,37 +278,23 @@ impl<'tok> Tokenizer<'tok> {
         ))
     }
 
-    fn consume_multiline(
-        &mut self,
-        indent: &'tok [u8],
-        rest: &'tok [u8],
-    ) -> Result<Token<'tok>, SyntaxError> {
+    fn consume_multiline(&mut self, indent: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = 0;
         let lno = self.lno;
-        while end < rest.len() {
-            let Some(next) = rest[end..].iter().position(is_newline) else {
-                end = rest.len();
+        let mut was_cr = false;
+
+        for line in self.input.split_inclusive(is_newline) {
+            if line.starts_with(indent) || line.iter().all(|c| is_whitespace(c) || is_newline(c)) {
+                if !(was_cr && line == [b'\n']) {
+                    self.lno += 1;
+                }
+                was_cr = line.last() == Some(&b'\r');
+                end += line.len();
+            } else {
                 break;
-            };
-            let next = end + next;
-
-            let newline_size = newline_size(&rest[next..]);
-            let remainder = &rest[next + newline_size..];
-            if remainder.starts_with(indent) {
-                self.lno += 1;
-                end = next + newline_size + indent.len();
-                continue;
             }
-            let next_c = remainder.iter().skip_while(|&c| is_whitespace(c)).next();
-            if next_c.is_none() || next_c.is_some_and(is_newline) {
-                self.lno += 1;
-                end = next + newline_size;
-                continue;
-            };
-
-            break;
         }
-        let (value, rest) = rest.split_at(end);
+        let (value, rest) = self.input.split_at(end);
         self.input = rest;
 
         let str = std::str::from_utf8(value).map_err(|_| SyntaxError::new(lno, "invalid UTF-8"))?;
@@ -351,7 +337,7 @@ impl<'tok> Iterator for Tokenizer<'tok> {
             if self.expect_multiline {
                 self.expect_multiline = false;
                 if indent.len() > current.len() && indent.starts_with(current) {
-                    return Some(self.consume_multiline(indent, rest));
+                    return Some(self.consume_multiline(indent));
                 }
             }
             if indent != current {

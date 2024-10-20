@@ -30,6 +30,21 @@ pub enum Token<'tok> {
 }
 
 impl<'tok> Token<'tok> {
+    /// returns the line on which the token starts
+    pub fn line_number(&self) -> usize {
+        match self {
+            Token::Newline(lno) => *lno,
+            Token::Comment(lno, _) => *lno,
+            Token::Indent(lno) => *lno,
+            Token::Outdent(lno) => *lno,
+            Token::ListItem(lno) => *lno,
+            Token::MapKey(lno, _) => *lno,
+            Token::Value(lno, _) => *lno,
+            Token::MultilineIndicator(lno, _) => *lno,
+            Token::MultilineValue(lno, _, _) => *lno,
+        }
+    }
+
     /// returns the actual value of a token processing escapes etc.
     /// This is most useful for [Token::MapKey], [Token::Value] and [Token::MultilineValue]; but also
     /// returns the contents of a [Token::Comment] or [Token::MultilineIndicator] for formatters.

@@ -45,6 +45,21 @@ impl<'tok> Token<'tok> {
         }
     }
 
+    /// returns the line on which the token starts (to put in error messages like: "expected a map key got a X")
+    pub fn name(&self) -> &'static str {
+        match self {
+            Token::Newline(..) => "newline",
+            Token::Comment(..) => "comment",
+            Token::Indent(..) => "indent",
+            Token::Outdent(..) => "outdent",
+            Token::ListItem(..) => "list item",
+            Token::MapKey(..) => "map key",
+            Token::Value(..) => "value",
+            Token::MultilineIndicator(..) => "multiline indicator",
+            Token::MultilineValue(..) => "multiline value",
+        }
+    }
+
     /// returns the actual value of a token processing escapes etc.
     /// This is most useful for [Token::MapKey], [Token::Value] and [Token::MultilineValue]; but also
     /// returns the contents of a [Token::Comment] or [Token::MultilineIndicator] for formatters.

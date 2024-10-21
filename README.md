@@ -1,4 +1,4 @@
-CONL is a post-modern replacement for JSON/YAML/TOML, etc... It supports a JSON-like data model of values, maps and lists; but is designed to be much easier to work with.
+CONL is a post-minimalist, human-centric configuration language. It is a replacement for JSON/YAML/TOML, etc... that supports a JSON-like data model of values, maps and lists; but is designed to be much easier to work with.
 
 Taking retro-inspriation from INI files, CONL does not have different syntax for different types of values. The type of a value is determined by the context, and so if a parser expects an int64 it knows to accept a `1` but reject a `1.1`; or if it expects a country code it can accept `no` for Norway, but reject `yes`.
 
@@ -69,7 +69,6 @@ The syntax of CONL has been designed with several priorities (in order):
 1. To be easy to read
 2. To be easy to edit
 3. To be easy to parse
-4. To be able to represent any JSON document
 
 The source must be valid UTF-8, and because CONL is indentation sensitive this grammar assumes the synthetic `indent` and `outdent` tokens are generated as described below.
 
@@ -104,7 +103,7 @@ A key in CONL always starts and ends with a non-blank, non-newline character. Wi
 
 ```
 key_char = (^ ' ' | '\t' | '\r' | '\n' | '"' | '#' | '=') | ('"' escape)
-key = key_char (key_char | '#' | '=' | blank+ token_char)*
+key = key_char (key_char | '#' | '=' | blank+ key_char)*
 ```
 
 Values are the same as keys, but = characters are always allowed.
@@ -153,6 +152,16 @@ After a newline, there are four possibilities:
 * The level of this line starts with the level of the previous line, and it is longer. In that case an `indent` token is generated.
 * The level of this line is shorter than the previous one and matches an earlier line. In this case one `outdent` token is generated per `indent` token generated since that line.
 * The level of this line does not match an earlier line. This is an error.
+
+# Other considerations
+
+CONL cannot explicitly represent a `null` value (to avoid the unnecessary distinction between a key mapped to null and a missing key). For maps you should omit keys that have the default value, and for list items (or map keys) you can use the empty string `"@`.
+
+This means that you cannot distinguish between a `vec![None]` and a `vec![Some("")]` in a map or a list. (Though hopefully such an subtle distinction doesn't make an impact on your application's behaviour)
+
+CONL can represent maps with any key type (not just strings) by parsing the keys as you would values.
+
+Most values can be serialized as either a single-line or a multi-line string. The exceptions are those that start or end ' ', '\t' or '\n', or contain '\r'. Parsers should not distinguish between single-line or multi-line syntax (the indicator is purely for syntax highlighting). Serializers should chose the most convenient (typically if the string contains newlines and can be represented as such, a multiline string is better).
 
 # Why?
 

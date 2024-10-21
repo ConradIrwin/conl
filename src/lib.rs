@@ -85,10 +85,10 @@ impl<'tok> Token<'tok> {
                     }
                     match c {
                         '"' | '#' | '=' => output.push(c),
-                        '_' => output.push_str(" "),
-                        '>' => output.push_str("\t"),
-                        '\\' => output.push_str("\r"),
-                        '/' => output.push_str("\n"),
+                        '_' => output.push(' '),
+                        '>' => output.push('\t'),
+                        '\\' => output.push('\r'),
+                        '/' => output.push('\n'),
                         '@' => {}
                         '{' => {
                             let mut found = String::new();
@@ -122,7 +122,7 @@ impl<'tok> Token<'tok> {
                 if escaped {
                     return Err(SyntaxError {
                         lno: *lno,
-                        msg: format!("invalid escape code: unexpected newline"),
+                        msg: "invalid escape code: unexpected newline".to_string(),
                     });
                 }
                 Ok(Cow::Owned(output))
@@ -190,7 +190,7 @@ fn is_newline_char(c: char) -> bool {
     c == '\r' || c == '\n'
 }
 fn newline_size(s: &[u8]) -> usize {
-    if s.get(0) == Some(&b'\r') && s.get(1) == Some(&b'\n') {
+    if s.first() == Some(&b'\r') && s.get(1) == Some(&b'\n') {
         2
     } else {
         1
@@ -202,9 +202,9 @@ fn newline_size(s: &[u8]) -> usize {
 /// need error-tolerant parsing (e.g. for a linter).
 /// It continues after yielding errors.
 /// See [parse] for a stricter interface.
-pub fn tokenize<'tok>(input: &'tok [u8]) -> Tokenizer<'tok> {
+pub fn tokenize(input: &[u8]) -> Tokenizer<'_> {
     Tokenizer {
-        input: input.into(),
+        input,
         expect_indent: true,
         expect_value: false,
         expect_multiline: false,
@@ -400,7 +400,7 @@ enum SectionType {
 ///
 /// Within a given Indent/Outdent section you'll always see either only [Token::MapKey] or [Token::ListItem].
 /// For an error-tolerant version see [tokenize].
-pub fn parse<'tok>(input: &'tok [u8]) -> Parser<'tok> {
+pub fn parse(input: &[u8]) -> Parser<'_> {
     Parser::new(input)
 }
 

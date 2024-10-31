@@ -2,76 +2,8 @@ CONL is a post-minimalist, human-centric configuration language.
 
 It is a replacement for JSON/YAML/TOML, etc... that supports a JSON-like data model of values, maps and lists; but is designed to be much easier to work with.
 
-For example:
-```
-# There are four ways to define a value:
-scalar = value
-
-list
-  = value1
-  = value2
-
-map
-  key1 = value1
-  key2 = value2
-
-multiline_scalar = """
-  value
-
-# For multiline scalars, you can specify a tag for syntax highlighting.
-init_script = """bash
-  #!/bin/bash
-
-  echo "hello world"
-
-# There is no quoting. Leading and trailing whitespace is ignored.
-# but keys and values can contain any characters (*conditions apply)
-spaced out key = value with = signs
-
-# To make it safe to include URLs as values, # is only a comment
-# at the start of a line, after whitespace, or after the first =
-# sign on a line.
-a = https://example.com#a # jump to section a
-
-# But the space around the = sign is purely for readability
-short=16 bits
-
-# It is possible to nest lists and maps as needed.
-# (and as in JSON, types can be mixed however you want)
-json_like
-  sub_map
-    key = value
-  sub_list
-    = value
-    =
-      map = no problem
-    =
-      = a list in a list # in a map in a map
-  sub_value = 5
-
-# For things that cannot be otherwise represented, you can use escapes:
-escapes
-  = "" # '"'
-  = "= # '=' (needed only if you want an equals in your key)
-  = "# # '#' (needed if you want a literal # at the start of a key/value, or after whitespace)
-  = "_ # normal space (needed only for leading/trailing whitespace)
-  = "> # tab (recommended always, but only needed for leading/trailing whitespace)
-  = "/ # newline
-  = "\ # carriage return
-  = "{1F321} # 🐱 (you can refer to any Unicode codepoint that is valid in UTF-8)
-  = "{} # gives an empty string (and must stand alone)
-
-# Variable types are not syntactically distinct.
-# The app you are configuring already knows what to expect.
-enabled = yes
-country_code = no
-
-# CONL also has no null, so you should comment out values you don't wish to set.
-# (or use "{} as a placeholder)
-overrides
-  # bits_per_byte = 8
-  int_size = 32
-```
+<img width="700" alt="Screenshot 2024-10-31 at 00 06 28" src="https://github.com/user-attachments/assets/840ffb35-e369-49f9-9a9e-f6092fb6a956">
+<img width="700" alt="Screenshot 2024-10-31 at 00 06 40" src="https://github.com/user-attachments/assets/ec00b8f6-1ba7-4db8-aacd-8e153f7ab7dc">
 
 ## Syntax
 

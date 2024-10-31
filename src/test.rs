@@ -132,7 +132,12 @@ fn test_errors() {
                 )
             }
             Err(e) => {
-                assert_eq!(e.to_string(), expected.trim(), "input: {:?}", input);
+                assert_eq!(
+                    e.to_string(),
+                    expected.trim().replace("␣", " "),
+                    "input: {:?}",
+                    input
+                );
             }
         }
     }

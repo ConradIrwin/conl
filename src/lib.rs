@@ -71,6 +71,10 @@ impl<'tok> Token<'tok> {
                 if !val.contains('"') {
                     return Ok(Cow::Borrowed(val));
                 }
+                if *val == "\"{}" {
+                    return Ok(Cow::Borrowed(""));
+                }
+
                 let mut output = String::new();
                 let mut chars = val.chars();
                 let mut escaped = false;
@@ -89,7 +93,6 @@ impl<'tok> Token<'tok> {
                         '>' => output.push('\t'),
                         '\\' => output.push('\r'),
                         '/' => output.push('\n'),
-                        '@' => {}
                         '{' => {
                             let mut found = String::new();
                             loop {
@@ -101,6 +104,7 @@ impl<'tok> Token<'tok> {
                             }
                             let Some(ch) = u32::from_str_radix(&found, 16)
                                 .ok()
+                                .filter(|_| found.len() <= 6)
                                 .and_then(|num| num.try_into().ok())
                             else {
                                 return Err(SyntaxError {
@@ -259,7 +263,7 @@ impl<'tok> Tokenizer<'tok> {
             std::str::from_utf8(value).map_err(|_| SyntaxError::new(self.lno, "invalid UTF-8"))?;
         let value = str.trim_matches(is_whitespace_char);
         if let Some(indicator) = value.strip_prefix("\"\"\"") {
-            if indicator.is_empty() || !indicator.chars().next().unwrap().is_ascii_punctuation() {
+            if self.is_multiline_indicator(indicator.trim_matches(is_whitespace_char)) {
                 self.expect_multiline = true;
                 return Ok(Token::MultilineIndicator(self.lno, indicator));
             }
@@ -267,15 +271,27 @@ impl<'tok> Tokenizer<'tok> {
         Ok(Token::Value(self.lno, value))
     }
 
+    fn is_multiline_indicator(&self, indicator: &str) -> bool {
+        if matches!(
+            indicator.chars().next(),
+            Some('#' | '=' | '"' | '_' | '>' | '/' | '\\' | '{')
+        ) {
+            return false;
+        }
+        !indicator.chars().any(|c| c.is_whitespace() || c == '"')
+    }
+
     fn consume_key(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = rest.len();
         let mut was_space = true;
+        let mut was_quote = false;
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b'#' && was_space) || (c == &b'=' && was_space) {
+            if is_newline(c) || (c == &b'#' && was_space) || (c == &b'=' && !was_quote) {
                 end = i;
                 break;
             }
-            was_space = is_whitespace(c)
+            was_space = is_whitespace(c);
+            was_quote = c == &b'"'
         }
 
         let (key, rest) = rest.split_at(end);

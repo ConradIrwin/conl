@@ -70,9 +70,34 @@ b = """bash
 2: invalid UTF-8
 
 ===
-b = """bash
+b = """ bash
 ---
 1: missing value
+
+===
+b = """ "ash
+---
+1: invalid escape code: "␣
+
+===
+b = "{0000001}
+---
+1: invalid escape code: "{0000001}
+
+===
+b = "{110000}
+---
+1: invalid escape code: "{110000}
+
+===
+b = "{D800}
+---
+1: invalid escape code: "{D800}
+
+===
+a"{} = a
+---
+1: invalid escape code: "{}
 
 ===
 b = a

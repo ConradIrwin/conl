@@ -53,23 +53,22 @@ escapes
   = "_ # normal space (needed only for leading/trailing whitespace)
   = "> # tab (recommended but only needed for leading/trailing whitespace)
   = "/ # newline
-  = "\ # carriage return
   = "{1F321} # 🐱 (you can refer to any Unicode codepoint valid in UTF-8)
-  = "{} # gives an empty string (and must stand alone)
 
 # Variable types are not syntactically distinct.
 # The app you are configuring already knows what to expect.
 enabled = yes
 country_code = no
 
-# CONL also has no null, so you should comment out values you don't wish to set.
+# CONL has no null, so you should comment out values you don't wish to set.
 # (or use "{} as a placeholder)
 overrides
   # bits_per_byte = 8
   int_size = 32
 
-# A map from the empty key to a list with a single empty value?
-# (this is supported for round-trip JSON compatibility, not because
-# you should design your configuration file to need this...)
-"{}
-  = "{}
+# Missing values are interpreted as appropriate for the type.
+# ["ribbon", "", "kittens"] if you were expecting strings.
+my favoite things
+  = ribbon
+  = # empty
+  = kittens

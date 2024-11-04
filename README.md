@@ -43,23 +43,18 @@ escape, or a hexadecimal sequence.
 escape = '"' | '#' | '=' | '_' | '>' | '\' | '/' | ( '{' [0-9a-fA-F]+ '}' )
 ```
 
-To represent the empty value, you can use `"{}`.
-```
-empty = `"{}`
-```
-
 A key in CONL always starts and ends with a non-blank, non-newline character. Within a key blanks are preserved. The character # may be included in a key if it is escaped, or not preceded by blanks. The character = may be included in a key if it is escaped.
 
 ```
 key_char = (^ ' ' | '\t' | '\r' | '\n' | '"' | '#' | '=') | ('"' escape)
-key = empty | ( key_char (key_char | '#' | blank+ key_char)* )
+key = ( key_char (key_char | '#' | blank+ key_char)* )
 ```
 
 Values are the same as keys, but = characters are also allowed.
 
 ```
 value_char = (^ ' ' | '\t' | '\r' | '\n' | '"' | '#') | ('"' escape)
-value = empty | ( value_char (value_char | '#' | blank+ value_char)* )
+value = ( value_char (value_char | '#' | blank+ value_char)* )
 ```
 
 For longer values, or values that contain newlines, you can use multline syntax. To allow for better syntax highlighting in modern editors, multiline tokens can be tagged with the expected language. Language tags cannot start with an escape sequence to avoid ambiguity, and also may not contain quotes or space to help avoid accidental errors.
@@ -83,12 +78,14 @@ Within a section any list item or map key can be set to either a single value, a
 ```
 list_item: '=' blank* any_value
 map_item: key blank* blank '=' any_value
-        | key blank* (blank comment)? newline indent section outdent
+        | key blank* (blank comment)? newline (indent section outdent)?
 
 any_value: value blank* (blank comment)? newline
          | multiline_value
-         | comment? newline indent section outdent
+         | comment? newline (indent section outdent)?
 ```
+
+It is allowed for no value to appear after a map key or a list item. As there is no way in CONL to represent a zero-length string, map, or array explicitly. Parsers should treat this as equivalent to whichever is expected.
 
 ## Indents
 
@@ -104,9 +101,9 @@ After a newline, there are four possibilities:
 
 # Other considerations
 
-CONL cannot explicitly distinguish a `null` from an empty string. For maps you should omit keys that have no value; but you can also use "{} as appropriate.
+CONL has no way to represent an empty string explicitly. When an ommitted value is encountered, it is either skipped, or coerced to an empty string, map or list as appropriate. You cannot use the empty string as a map key because it would conflict with list syntax.
 
-This means that you cannot distinguish between a `vec![None]` and a `vec![Some("")]` in a map or a list. (Though hopefully such an subtle distinction doesn't make an impact on your application's behaviour)
+This also means that you cannot distinguish between a `vec![None]` and a `vec![Some("")]` in a list. (Though hopefully such an subtle distinction doesn't make an impact on your application's behaviour).
 
 CONL can represent maps with any key type (not just strings) by parsing the keys as you would values.
 

@@ -1,3 +1,9 @@
+1.4.0
+=====
+
+* Allow values to be omitted (necessary now comments no longer participate in indentation).
+* Remove `"{}` for empty.
+
 1.3.0
 =====
 

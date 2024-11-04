@@ -27,6 +27,8 @@ pub enum Token<'tok> {
     MultilineIndicator(usize, &'tok str),
     /// MultilineValue contains a multiline value
     MultilineValue(usize, &'tok str, &'tok str),
+    /// NoValue indicates that a key or item had no value.
+    NoValue(usize),
 }
 
 impl<'tok> Token<'tok> {
@@ -42,6 +44,7 @@ impl<'tok> Token<'tok> {
             Token::Value(lno, _) => *lno,
             Token::MultilineIndicator(lno, _) => *lno,
             Token::MultilineValue(lno, _, _) => *lno,
+            Token::NoValue(lno) => *lno,
         }
     }
 
@@ -55,6 +58,7 @@ impl<'tok> Token<'tok> {
             Token::ListItem(..) => "list item",
             Token::MapKey(..) => "map key",
             Token::Value(..) => "value",
+            Token::NoValue(..) => "no value",
             Token::MultilineIndicator(..) => "multiline indicator",
             Token::MultilineValue(..) => "multiline value",
         }
@@ -70,9 +74,6 @@ impl<'tok> Token<'tok> {
             MapKey(lno, val) | Value(lno, val) => {
                 if !val.contains('"') {
                     return Ok(Cow::Borrowed(val));
-                }
-                if *val == "\"{}" {
-                    return Ok(Cow::Borrowed(""));
                 }
 
                 let mut output = String::new();
@@ -425,6 +426,7 @@ pub fn parse(input: &[u8]) -> Parser<'_> {
 /// See [parse]
 pub struct Parser<'tok> {
     tokenizer: Tokenizer<'tok>,
+    peek: Option<Option<Token<'tok>>>,
     multiline_indicator: Option<usize>,
     needs_value: Option<usize>,
     errored: bool,
@@ -439,6 +441,7 @@ impl<'tok> Parser<'tok> {
             needs_value: None,
             errored: false,
             stack: vec![None],
+            peek: None,
         }
     }
 }
@@ -452,13 +455,17 @@ impl<'tok> Iterator for Parser<'tok> {
         }
         use Token::*;
 
-        let next = match self.tokenizer.next() {
-            Some(Err(e)) => {
-                self.errored = true;
-                return Some(Err(e));
+        let next = if let Some(peek) = self.peek.take() {
+            peek
+        } else {
+            match dbg!(self.tokenizer.next()) {
+                Some(Err(e)) => {
+                    self.errored = true;
+                    return Some(Err(e));
+                }
+                None => None,
+                Some(Ok(next)) => Some(next),
             }
-            None => None,
-            Some(Ok(next)) => Some(next),
         };
 
         match next {
@@ -486,8 +493,8 @@ impl<'tok> Iterator for Parser<'tok> {
                     next
                 }
                 _ => {
-                    self.errored = true;
-                    return Some(Err(SyntaxError::new(lno, "missing value")));
+                    self.peek = Some(next);
+                    Some(Token::NoValue(lno))
                 }
             }
         } else {

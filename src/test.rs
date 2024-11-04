@@ -34,7 +34,7 @@ fn section_to_json<'tok>(
 ) -> Result<(), SyntaxError> {
     use crate::Token::*;
     let mut sect_type: Option<SectionType> = None;
-    while let Some(result) = parser.next() {
+    while let Some(result) = dbg!(parser.next()) {
         match result? {
             Newline(..) | Comment(..) | MultilineIndicator(..) => {}
             Indent(..) => {
@@ -74,6 +74,7 @@ fn section_to_json<'tok>(
             ref tok @ Value(..) | ref tok @ MultilineValue(..) => {
                 string_to_json(&tok.unescape()?, output);
             }
+            NoValue(..) => output.push_str("null"),
         }
     }
 

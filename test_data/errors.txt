@@ -10,19 +10,6 @@
 
 ===
 =
- =
-= a
----
-2: missing value
-
-===
-a =
-b = c
----
-1: missing value
-
-===
-=
  = a
 ␉= a
 ---
@@ -110,9 +97,3 @@ b = a
 a = b
 ---
 2: expected list item
-
-===
-a
-  #
----
-1: missing value

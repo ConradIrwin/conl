@@ -37,13 +37,13 @@ comment = '#' (^ '\r' | 'n')*
 An escape sequence begins with a double quote (U+0022) and is followed by either a named
 escape, or a hexadecimal sequence.
 * `""`, `"#`, `"=` generate `"`, `#` and `=` respectively.
-* `"_`, `">`, `"\` and `"/` generate space, tab, carriage return and newline.
+* `"_`, `">`, `"/` generate space, tab, and newline.
 * `"{ [0-9a-fA-F]+ }` generates the unicode character with the specified hexadecimal value. Unpaired surrogates are disallowed to ensure that all values are valid UTF-8.
 ```
 escape = '"' | '#' | '=' | '_' | '>' | '\' | '/' | ( '{' [0-9a-fA-F]+ '}' )
 ```
 
-To represent the empty string, you can use `"{}`.
+To represent the empty value, you can use `"{}`.
 ```
 empty = `"{}`
 ```
@@ -67,11 +67,11 @@ For longer values, or values that contain newlines, you can use multline syntax.
 After parsing, multline tokens have all initial and final blanks and newlines removed. All newlines become \n, and any trailing or leading whitespace on individual lines is preserved. This means they cannot represent values that start or end with blanks or whitespace, or values containing carriage returns.
 
 ```
-multline_tag = (^ '"' | '#' | '=' | '_' | '>' | '\' | '/' |  '{') (^ '"' | ' ' | '\t')*
+multline_tag = (^ '"' | '#' | '=' | '_' | '>' | '/' |  '{') (^ '"' | ' ' | '\t')*
 multiline_value = '"""' multiline_tag? blank* comment? newline indent .* outdent
 ```
 
-Maps and lists are represented as indent-separated sections in the file. A section that contains no items (and for which the parser has no type hints) is considered an empty map. Keys must be unique within a map section.
+Maps and lists are represented as indent-separated sections in the file.
 ```
 section = list_section | map_section
 map_section = (map_item | comment? newline)*
@@ -92,7 +92,7 @@ any_value: value blank* (blank comment)? newline
 
 ## Indents
 
-The `level` of a line is the string of tab and space characters at the start. Lines that contain no non-blank characters are assumed to have the same indentation as the previous line, though lines that contain just a comment must have the correct indentation.
+The `level` of a line is the string of tab and space characters at the start. Lines that contain no non-blank characters, or only blanks followed by a comment, are assumed to have the same indentation as the previous line.
 
 Any mix of tabs and spaces is allowed in the `level` and they are considered distinct. Within a multiline string indent/outdent tokens are not generated, so that multiline values can contain inconsistent indentation.
 
@@ -104,7 +104,7 @@ After a newline, there are four possibilities:
 
 # Other considerations
 
-CONL cannot explicitly represent a `null` value (to avoid the unnecessary distinction between a key mapped to null and a missing key). For maps you should omit keys that have the default value, and for list items (or map keys) you can use the empty string `"{}`.
+CONL cannot explicitly distinguish a `null` from an empty string. For maps you should omit keys that have no value; but you can also use "{} as appropriate.
 
 This means that you cannot distinguish between a `vec![None]` and a `vec![Some("")]` in a map or a list. (Though hopefully such an subtle distinction doesn't make an impact on your application's behaviour)
 

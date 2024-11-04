@@ -91,7 +91,6 @@ impl<'tok> Token<'tok> {
                         '"' | '#' | '=' => output.push(c),
                         '_' => output.push(' '),
                         '>' => output.push('\t'),
-                        '\\' => output.push('\r'),
                         '/' => output.push('\n'),
                         '{' => {
                             let mut found = String::new();
@@ -362,6 +361,10 @@ impl<'tok> Iterator for Tokenizer<'tok> {
             return None;
         };
 
+        if *first == b'#' && !(self.expect_indent && self.expect_multiline) {
+            return Some(self.consume_comment(&rest[1..]));
+        }
+
         if self.expect_indent {
             self.expect_indent = false;
             let &current = self.indent_stack.last().unwrap();
@@ -391,7 +394,6 @@ impl<'tok> Iterator for Tokenizer<'tok> {
                 self.input = &rest[1..];
                 Some(Ok(Token::ListItem(self.lno)))
             }
-            b'#' => Some(self.consume_comment(&rest[1..])),
             _ if self.expect_value => {
                 self.expect_value = false;
                 Some(self.consume_value(rest))

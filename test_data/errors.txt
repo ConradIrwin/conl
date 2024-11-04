@@ -110,3 +110,9 @@ b = a
 a = b
 ---
 2: expected list item
+
+===
+a
+  #
+---
+1: missing value

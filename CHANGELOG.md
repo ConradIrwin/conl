@@ -1,3 +1,9 @@
+1.3.0
+=====
+
+* Comments no-longer participate in indentation.
+* Removed `"\`.
+
 1.2.0
 =====
 

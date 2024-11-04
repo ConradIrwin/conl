@@ -114,7 +114,6 @@ fn test_errors() {
         .replace("␊", "\r");
 
     for example in examples.split("\n===\n") {
-        dbg!("----------------------");
         let (input, expected) = example.split_once("\n---\n").unwrap();
 
         let input: Vec<u8> = input

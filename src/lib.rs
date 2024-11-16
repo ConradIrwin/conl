@@ -115,7 +115,7 @@ impl<'tok> Token<'tok> {
                             }
                             let Some(ch) = u32::from_str_radix(&found, 16)
                                 .ok()
-                                .filter(|_| found.len() <= 6)
+                                .filter(|_| found.len() <= 8)
                                 .and_then(|num| num.try_into().ok())
                             else {
                                 return Err(SyntaxError {

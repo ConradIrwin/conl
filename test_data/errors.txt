@@ -67,9 +67,9 @@ b = "\"\ \ash"
 1: invalid escape code: \␣
 
 ===
-b = "\{0000001}"
+b = "\{000000001}"
 ---
-1: invalid escape code: \{0000001}
+1: invalid escape code: \{000000001}
 
 ===
 b = "\{110000}"

@@ -44,34 +44,22 @@ json_like
       = a list in a list # in a map in a map
   sub_value = 5
 
-# For more esoteric uses, you can use a quoted literal.
-# A quoted literal can represent any string of unicode characters.
-# They are for situations like keys with = signs, or values
-# with leading whitespace that CONL cannot otherwise represent.
-quoted_literal = "\twow\ttabs!\t"
-# Quoted literals support the following escape sequencess:
+# Variable types are not syntactically distinct.
+# The app you are configuring already knows what to expect.
+enabled = yes
+country_code = no
+
+# For more esoteric uses, CONL provides quoted scalars.
+# The quotes do not indicate type information, but let you
+# express things (like empty strings) that cannot
+# otherwise be expressed (and rarely need to be).
+quoted_scalar = "\twow\ttabs!\t"
+
+# Quoted scalars support the following escape sequencess:
 escape_sequences
   = "\\" # '\'
   = "\"" # '"'
   = "\t" # tab
   = "\n" # newline
   = "\r" # carriage return
-  = "\{0}" # U+0000
   = "\{1F321}" # 🐱 (or any Unicode codepoint valid in UTF-8)
-
-# Variable types are not syntactically distinct.
-# The app you are configuring already knows what to expect.
-enabled = yes
-country_code = no
-
-# CONL has no null, so you should comment out values you don't wish to set.
-overrides
-  # bits_per_byte = 8
-  int_size = 32
-
-# Missing values are interpreted as appropriate for the type.
-# ["ribbon", "", "kittens"] if you were expecting strings.
-my favoite things
-  = ribbon
-  = # empty
-  = kittens

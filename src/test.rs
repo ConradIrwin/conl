@@ -34,7 +34,7 @@ fn section_to_json<'tok>(
 ) -> Result<(), SyntaxError> {
     use crate::Token::*;
     let mut sect_type: Option<SectionType> = None;
-    while let Some(result) = dbg!(parser.next()) {
+    while let Some(result) = parser.next() {
         match result? {
             Newline(..) | Comment(..) | MultilineIndicator(..) => {}
             Indent(..) => {
@@ -98,7 +98,7 @@ fn test_equivalence() {
 
         match to_json(input.as_bytes()) {
             Ok(output) => {
-                assert_eq!(output, expected.trim(), "input: {:?}", input);
+                assert_eq!(output, expected.trim(), "input: {}", input);
             }
             Err(e) => {
                 panic!("failed to parse: {}:\n{}", e, input)
@@ -136,7 +136,7 @@ fn test_errors() {
                     e.to_string(),
                     expected.trim().replace("␣", " "),
                     "input: {:?}",
-                    input
+                    String::from_utf8_lossy(&input)
                 );
             }
         }

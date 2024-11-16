@@ -21,7 +21,7 @@ pub enum Token<'tok> {
     ListItem(usize),
     /// Key indicates a new map key. Its value will be the next [Token::Value], [Token::MultilineValue] or [Token::Indent] you receive.
     MapKey(usize, &'tok str),
-    /// MultilineValue contains a single-line value
+    /// Value contains a single-line value
     Value(usize, &'tok str),
     /// MultilineIndicator contains the language tag for a multiline value (you can likely skip this token unless building a formatter)
     MultilineIndicator(usize, &'tok str),
@@ -64,7 +64,7 @@ impl<'tok> Token<'tok> {
         }
     }
 
-    /// returns the actual value of a token processing escapes etc.
+    /// returns the actual value of a token (removing quotes if present)
     /// This is most useful for [Token::MapKey], [Token::Value] and [Token::MultilineValue]; but also
     /// returns the contents of a [Token::Comment] or [Token::MultilineIndicator] for formatters.
     /// Other tokens always return Ok(Cow::Borrowed(""))
@@ -72,27 +72,38 @@ impl<'tok> Token<'tok> {
         use Token::*;
         match self {
             MapKey(lno, val) | Value(lno, val) => {
-                if !val.contains('"') {
+                if !val.starts_with('"') {
                     return Ok(Cow::Borrowed(val));
+                }
+                if val.starts_with('"') && val.ends_with('"') && val.len() > 1 {
+                    let possible = &val[1..val.len() - 1];
+                    if !possible.contains(['"', '\\']) {
+                        return Ok(Cow::Borrowed(possible));
+                    }
                 }
 
                 let mut output = String::new();
-                let mut chars = val.chars();
+                let mut chars = val.chars().skip(1);
                 let mut escaped = false;
+                let mut closed = false;
                 'outer: while let Some(c) = chars.next() {
                     if !escaped {
-                        if c == '"' {
+                        if c == '\\' {
                             escaped = true
+                        } else if c == '"' {
+                            closed = true;
+                            break 'outer;
                         } else {
                             output.push(c)
                         }
                         continue;
                     }
                     match c {
-                        '"' | '#' | '=' => output.push(c),
-                        '_' => output.push(' '),
-                        '>' => output.push('\t'),
-                        '/' => output.push('\n'),
+                        '"' => output.push(c),
+                        '\\' => output.push('\\'),
+                        'n' => output.push('\n'),
+                        'r' => output.push('\r'),
+                        't' => output.push('\t'),
                         '{' => {
                             let mut found = String::new();
                             loop {
@@ -109,7 +120,7 @@ impl<'tok> Token<'tok> {
                             else {
                                 return Err(SyntaxError {
                                     lno: *lno,
-                                    msg: format!("invalid escape code: \"{{{}}}", found),
+                                    msg: format!("invalid escape code: \\{{{}}}", found),
                                 });
                             };
                             output.push(ch)
@@ -117,7 +128,7 @@ impl<'tok> Token<'tok> {
                         _ => {
                             return Err(SyntaxError {
                                 lno: *lno,
-                                msg: format!("invalid escape code: \"{}", c),
+                                msg: format!("invalid escape code: \\{}", c),
                             })
                         }
                     }
@@ -126,7 +137,19 @@ impl<'tok> Token<'tok> {
                 if escaped {
                     return Err(SyntaxError {
                         lno: *lno,
-                        msg: "invalid escape code: unexpected newline".to_string(),
+                        msg: "invalid escape code: end of string".to_string(),
+                    });
+                }
+                if chars.next().is_some() {
+                    return Err(SyntaxError {
+                        lno: *lno,
+                        msg: "extra characters after quotes".to_string(),
+                    });
+                }
+                if !closed {
+                    return Err(SyntaxError {
+                        lno: *lno,
+                        msg: "unclosed quotes".to_string(),
                     });
                 }
                 Ok(Cow::Owned(output))
@@ -248,8 +271,42 @@ impl<'tok> Tokenizer<'tok> {
     }
 
     fn consume_value(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
+        if let Some(indicator) = rest.strip_prefix(&[b'"', b'"', b'"']) {
+            return self.consume_multiline_indicator(indicator);
+        }
+
+        let mut quoted = rest.first() == Some(&b'"');
         let mut end = rest.len();
         let mut was_space = true;
+        let mut was_escape = false;
+        for (i, c) in rest.iter().enumerate() {
+            if is_newline(c) || (c == &b'#' && was_space && !quoted) {
+                end = i;
+                break;
+            }
+            if i > 0 && !was_escape && c == &b'"' {
+                quoted = false;
+                was_space = true;
+            } else {
+                was_space = is_whitespace(c);
+            }
+            was_escape = c == &b'\\'
+        }
+
+        let (value, rest) = rest.split_at(end);
+        self.input = rest;
+        let str =
+            std::str::from_utf8(value).map_err(|_| SyntaxError::new(self.lno, "invalid UTF-8"))?;
+        let value = str.trim_matches(is_whitespace_char);
+        Ok(Token::Value(self.lno, value))
+    }
+
+    fn consume_multiline_indicator(
+        &mut self,
+        rest: &'tok [u8],
+    ) -> Result<Token<'tok>, SyntaxError> {
+        let mut was_space = true;
+        let mut end = rest.len();
         for (i, c) in rest.iter().enumerate() {
             if is_newline(c) || (c == &b'#' && was_space) {
                 end = i;
@@ -259,39 +316,33 @@ impl<'tok> Tokenizer<'tok> {
         }
         let (value, rest) = rest.split_at(end);
         self.input = rest;
+
         let str =
             std::str::from_utf8(value).map_err(|_| SyntaxError::new(self.lno, "invalid UTF-8"))?;
         let value = str.trim_matches(is_whitespace_char);
-        if let Some(indicator) = value.strip_prefix("\"\"\"") {
-            if self.is_multiline_indicator(indicator.trim_matches(is_whitespace_char)) {
-                self.expect_multiline = true;
-                return Ok(Token::MultilineIndicator(self.lno, indicator));
-            }
-        }
-        Ok(Token::Value(self.lno, value))
-    }
 
-    fn is_multiline_indicator(&self, indicator: &str) -> bool {
-        if matches!(
-            indicator.chars().next(),
-            Some('#' | '=' | '"' | '_' | '>' | '/' | '\\' | '{')
-        ) {
-            return false;
-        }
-        !indicator.chars().any(|c| c.is_whitespace() || c == '"')
+        self.expect_multiline = true;
+        Ok(Token::MultilineIndicator(self.lno, value))
     }
 
     fn consume_key(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = rest.len();
         let mut was_space = true;
-        let mut was_quote = false;
+        let mut was_escape = false;
+        let mut quoted = rest.first() == Some(&b'"');
+
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b'#' && was_space) || (c == &b'=' && !was_quote) {
+            if is_newline(c) || (c == &b'#' && was_space && !quoted) || (c == &b'=' && !quoted) {
                 end = i;
                 break;
             }
-            was_space = is_whitespace(c);
-            was_quote = c == &b'"'
+            if i > 0 && !was_escape && c == &b'"' {
+                quoted = false;
+                was_space = true;
+            } else {
+                was_space = is_whitespace(c);
+            }
+            was_escape = c == &b'\\'
         }
 
         let (key, rest) = rest.split_at(end);
@@ -458,7 +509,7 @@ impl<'tok> Iterator for Parser<'tok> {
         let next = if let Some(peek) = self.peek.take() {
             peek
         } else {
-            match dbg!(self.tokenizer.next()) {
+            match self.tokenizer.next() {
                 Some(Err(e)) => {
                     self.errored = true;
                     return Some(Err(e));

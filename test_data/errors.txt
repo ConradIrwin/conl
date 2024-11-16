@@ -18,17 +18,17 @@
 ===
 a = "o
 ---
-1: invalid escape code: "o
+1: unclosed quotes
 
 ===
-a = "{
+a = "\{"
 ---
-1: invalid escape code: unexpected newline
+1: invalid escape code: end of string
 
 ===
-a = "{g}
+a = "\{g}"
 ---
-1: invalid escape code: "{g}
+1: invalid escape code: \{g}
 
 ===
 a = ?
@@ -62,29 +62,29 @@ b = """ bash
 1: missing value
 
 ===
-b = """ "ash
+b = "\"\ \ash"
 ---
-1: invalid escape code: "␣
+1: invalid escape code: \␣
 
 ===
-b = "{0000001}
+b = "\{0000001}"
 ---
-1: invalid escape code: "{0000001}
+1: invalid escape code: \{0000001}
 
 ===
-b = "{110000}
+b = "\{110000}"
 ---
-1: invalid escape code: "{110000}
+1: invalid escape code: \{110000}
 
 ===
-b = "{D800}
+b = "\{D800}"
 ---
-1: invalid escape code: "{D800}
+1: invalid escape code: \{D800}
 
 ===
-a"{} = a
+"a\{}" = a
 ---
-1: invalid escape code: "{}
+1: invalid escape code: \{}
 
 ===
 b = a

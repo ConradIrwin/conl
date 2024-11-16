@@ -2,11 +2,6 @@ CONL is a post-minimalist, human-centric configuration language.
 
 It is a replacement for JSON/YAML/TOML, etc... that supports a JSON-like data model of values, maps and lists; but is designed to be much easier to work with.
 
-Consider this [example file](./example.conl):
-
-<img width="700" alt="Screenshot 2024-10-31 at 00 06 28" src="https://github.com/user-attachments/assets/840ffb35-e369-49f9-9a9e-f6092fb6a956">
-<img width="700" alt="Screenshot 2024-10-31 at 00 06 40" src="https://github.com/user-attachments/assets/ec00b8f6-1ba7-4db8-aacd-8e153f7ab7dc">
-
 ## Syntax
 
 The syntax of CONL has been designed with several priorities (in order):
@@ -27,42 +22,48 @@ Within a line, you can use tabs (U+0009) or spaces (U+0020) for blanks. Other un
 blank = ' ' | '\t'
 ```
 
-A comment begins with the pound sign (U+0023), and continues until the next newline.
-To allow for keys or values that contain a literal pound sign, comments that do not start
-at the beginning of a line or after an = must be preceded by a blank.
+A comment begins with a # (U+0023), and continues until the next newline.
+To allow keys or values to contain #, comments must usually be preceded
+by a blank (or an =, or a close quote).
 ```
 comment = '#' (^ '\r' | 'n')*
 ```
 
-An escape sequence begins with a double quote (U+0022) and is followed by either a named
-escape, or a hexadecimal sequence.
-* `""`, `"#`, `"=` generate `"`, `#` and `=` respectively.
-* `"_`, `">`, `"/` generate space, tab, and newline.
-* `"{ [0-9a-fA-F]+ }` generates the unicode character with the specified hexadecimal value. Unpaired surrogates are disallowed to ensure that all values are valid UTF-8.
+A quoted literal begins with a double quote (U+0022) and ends with the same character.
 ```
-escape = '"' | '#' | '=' | '_' | '>' | '\' | '/' | ( '{' [0-9a-fA-F]+ '}' )
+quoted_literal = '"' ( escape | [^ '\\' | '"' | '\r' | '\n'] )* '"'
 ```
 
-A key in CONL always starts and ends with a non-blank, non-newline character. Within a key blanks are preserved. The character # may be included in a key if it is escaped, or not preceded by blanks. The character = may be included in a key if it is escaped.
+Within quoted literals, escapes may be used:
 
 ```
-key_char = (^ ' ' | '\t' | '\r' | '\n' | '"' | '#' | '=') | ('"' escape)
-key = ( key_char (key_char | '#' | blank+ key_char)* )
+escape = '\' ( '\' | '"' | 'r' | 'n' | 't' | ( '{' [0-9a-fA-F]{1,8} '}' )
 ```
 
-Values are the same as keys, but = characters are also allowed.
+A key in CONL may either be a quoted literal, or (more usually) a non-empty
+string of characters that does not start with '"', or contain '=' or ' #' or
+'\t#'. Keys may be surrounded by blanks, but within the key blanks are preserved.
 
 ```
-value_char = (^ ' ' | '\t' | '\r' | '\n' | '"' | '#') | ('"' escape)
-value = ( value_char (value_char | '#' | blank+ value_char)* )
+normal_key = [ ^ '"' | '#' | '=' | blank ] (  [^ '#' | '=' | blank ]+ | blank+ [^ '#' | '='] )*
+key = normal_key | quoted_literal
 ```
 
-For longer values, or values that contain newlines, you can use multline syntax. To allow for better syntax highlighting in modern editors, multiline tokens can be tagged with the expected language. Language tags cannot start with an escape sequence to avoid ambiguity, and also may not contain quotes or space to help avoid accidental errors.
+Values are the same as keys, but = characters are also allowed. As with keys, there is no
+semantic difference between quoted and unquoted values. "false" and false are equivalent,
+and the meaning (a string or a boolean) is determined by the context.
+
+```
+normal_value = [ ^ '"' | '#' | blank ] ( [ ^ '#' | blank ]+ | blank+ [^ '#' ] )*
+value = normal_value | quoted_literal
+```
+
+For longer values, or values that contain newlines, you can use multline syntax. To allow for better syntax highlighting in modern editors, multiline tokens can be tagged with the expected language.
 
 After parsing, multline tokens have all initial and final blanks and newlines removed. All newlines become \n, and any trailing or leading whitespace on individual lines is preserved. This means they cannot represent values that start or end with blanks or whitespace, or values containing carriage returns.
 
 ```
-multline_tag = (^ '"' | '#' | '=' | '_' | '>' | '/' |  '{') (^ '"' | ' ' | '\t')*
+multline_tag = [^ '#' ] ( [^ '#' | blank ]+ | blank+ [^ '#' ] )*
 multiline_value = '"""' multiline_tag? blank* comment? newline indent .* outdent
 ```
 
@@ -98,16 +99,6 @@ After a newline, there are four possibilities:
 * The level of this line starts with the level of the previous line, and it is longer. In that case an `indent` token is generated.
 * The level of this line is shorter than the previous one and matches an earlier line. In this case one `outdent` token is generated per `indent` token generated since that line.
 * The level of this line does not match an earlier line. This is an error.
-
-# Other considerations
-
-CONL has no way to represent an empty string explicitly. When an ommitted value is encountered, it is either skipped, or coerced to an empty string, map or list as appropriate. You cannot use the empty string as a map key because it would conflict with list syntax.
-
-This also means that you cannot distinguish between a `vec![None]` and a `vec![Some("")]` in a list. (Though hopefully such an subtle distinction doesn't make an impact on your application's behaviour).
-
-CONL can represent maps with any key type (not just strings) by parsing the keys as you would values.
-
-Most values can be serialized as either a single-line or a multi-line string. The exceptions are those that start or end ' ', '\t' or '\n', or contain '\r'. Parsers should not distinguish between single-line or multi-line syntax (the indicator is purely for syntax highlighting). Serializers should chose the most convenient (typically if the string contains newlines and can be represented as such, a multiline string is better).
 
 # Why?
 

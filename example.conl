@@ -20,13 +20,12 @@ init_script = """bash
 
   echo "hello world"
 
-# There is no quoting. Leading and trailing whitespace is ignored.
+# Quoting is not required. Leading and trailing whitespace is ignored.
 # but keys and values can contain any characters (*conditions apply)
-spaced out key = value with = signs
+spaced out key = value with = signs and "quotes"!
 
 # To make it safe to include URLs as values, # is only a comment
-# at the start of a line, after whitespace, or after the first =
-# sign on a line.
+# after whitespace.
 a = https://example.com#a # jump to section a
 
 # But the space around the = sign is purely for readability
@@ -45,15 +44,20 @@ json_like
       = a list in a list # in a map in a map
   sub_value = 5
 
-# For things that cannot be otherwise represented, you can use escapes:
-escapes
-  = "" # '"'
-  = "= # '=' (needed only if you want an equals in your key)
-  = "# # '#' (needed if you want a literal # after whitespace)
-  = "_ # normal space (needed only for leading/trailing whitespace)
-  = "> # tab (recommended but only needed for leading/trailing whitespace)
-  = "/ # newline
-  = "{1F321} # 🐱 (you can refer to any Unicode codepoint valid in UTF-8)
+# For more esoteric uses, you can use a quoted literal.
+# A quoted literal can represent any string of unicode characters.
+# They are for situations like keys with = signs, or values
+# with leading whitespace that CONL cannot otherwise represent.
+quoted_literal = "\twow\ttabs!\t"
+# Quoted literals support the following escape sequencess:
+escape_sequences
+  = "\\" # '\'
+  = "\"" # '"'
+  = "\t" # tab
+  = "\n" # newline
+  = "\r" # carriage return
+  = "\{0}" # U+0000
+  = "\{1F321}" # 🐱 (or any Unicode codepoint valid in UTF-8)
 
 # Variable types are not syntactically distinct.
 # The app you are configuring already knows what to expect.
@@ -61,7 +65,6 @@ enabled = yes
 country_code = no
 
 # CONL has no null, so you should comment out values you don't wish to set.
-# (or use "{} as a placeholder)
 overrides
   # bits_per_byte = 8
   int_size = 32

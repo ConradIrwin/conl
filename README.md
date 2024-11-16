@@ -2,6 +2,13 @@ CONL is a post-minimalist, human-centric configuration language.
 
 It is a replacement for JSON/YAML/TOML, etc... that supports a JSON-like data model of values, maps and lists; but is designed to be much easier to work with.
 
+Consider this [example file](../example.conl):
+
+![Screenshot 2024-11-16 at 00 03 11](https://github.com/user-attachments/assets/395f48b9-f63b-417f-a120-7475c84a9dce)
+![Screenshot 2024-11-16 at 00 03 11](https://github.com/user-attachments/assets/4b2a46d5-6702-408e-a6e9-3ddc21ad69d0)
+
+
+
 ## Syntax
 
 The syntax of CONL has been designed with several priorities (in order):

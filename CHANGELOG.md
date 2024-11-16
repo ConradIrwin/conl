@@ -1,3 +1,8 @@
+1.5.0
+=====
+
+* Switch from escape codes to strings. Although the escape codes are likely used less often, it is quite inconvenient to represent a key with multiple = signs using them.
+
 1.4.0
 =====
 

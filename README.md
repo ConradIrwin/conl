@@ -29,24 +29,24 @@ by a blank (or an =, or a close quote).
 comment = '#' (^ '\r' | 'n')*
 ```
 
-A quoted literal begins with a double quote (U+0022) and ends with the same character.
+A quoted scalar begins with a double quote (U+0022) and ends with the same character.
 ```
-quoted_literal = '"' ( escape | [^ '\\' | '"' | '\r' | '\n'] )* '"'
+quoted_scalar = '"' ( escape | [^ '\\' | '"' | '\r' | '\n'] )* '"'
 ```
 
-Within quoted literals, escapes may be used:
+Within quoted scalars, escapes may be used:
 
 ```
 escape = '\' ( '\' | '"' | 'r' | 'n' | 't' | ( '{' [0-9a-fA-F]{1,8} '}' )
 ```
 
-A key in CONL may either be a quoted literal, or (more usually) a non-empty
+A key in CONL may either be a quoted scalar, or (more usually) a non-empty
 string of characters that does not start with '"', or contain '=' or ' #' or
 '\t#'. Keys may be surrounded by blanks, but within the key blanks are preserved.
 
 ```
 normal_key = [ ^ '"' | '#' | '=' | blank ] (  [^ '#' | '=' | blank ]+ | blank+ [^ '#' | '='] )*
-key = normal_key | quoted_literal
+key = normal_key | quoted_scalar
 ```
 
 Values are the same as keys, but = characters are also allowed. As with keys, there is no
@@ -55,7 +55,7 @@ and the meaning (a string or a boolean) is determined by the context.
 
 ```
 normal_value = [ ^ '"' | '#' | blank ] ( [ ^ '#' | blank ]+ | blank+ [^ '#' ] )*
-value = normal_value | quoted_literal
+value = normal_value | quoted_scalar
 ```
 
 For longer values, or values that contain newlines, you can use multline syntax. To allow for better syntax highlighting in modern editors, multiline tokens can be tagged with the expected language.

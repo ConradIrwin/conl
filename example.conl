@@ -1,6 +1,6 @@
-# CONL is a post-minimalist, human-centric configuration language.
+; CONL is a post-minimalist, human-centric configuration language.
 
-# There are four ways to define a value:
+; There are four ways to define a value:
 scalar = value
 
 list
@@ -14,25 +14,18 @@ map
 multiline_scalar = """
   value
 
-# For multiline scalars, you can specify a tag for syntax highlighting.
+; Multiline scalars support an optional hint for syntax highlighting.
 init_script = """bash
   #!/bin/bash
 
   echo "hello world"
 
-# Quoting is not required. Leading and trailing whitespace is ignored.
-# but keys and values can contain any characters (*conditions apply)
+; Quoting is rarely required. Keys and values can contain pretty
+; much any character except ; (and = for keys).
 spaced out key = value with = signs and "quotes"!
 
-# To make it safe to include URLs as values, # is only a comment
-# after whitespace.
-a = https://example.com#a # jump to section a
-
-# But the space around the = sign is purely for readability
-short=16 bits
-
-# It is possible to nest lists and maps as needed.
-# (and as in JSON, types can be mixed however you want)
+; It is possible to nest lists and maps as needed.
+; (and as in JSON, types can be mixed however you want)
 json_like
   sub_map
     key = value
@@ -41,25 +34,24 @@ json_like
     =
       map = no problem
     =
-      = a list in a list # in a map in a map
+      = a list in a list ; in a map in a map
   sub_value = 5
 
-# Variable types are not syntactically distinct.
-# The app you are configuring already knows what to expect.
+; Types are deferred until parse time.
+; The app you are configuring knows what to expect.
 enabled = yes
 country_code = no
 
-# For more esoteric uses, CONL provides quoted scalars.
-# The quotes do not indicate type information, but let you
-# express things (like empty strings) that cannot
-# otherwise be expressed (and rarely need to be).
+; But, if you need an empty string, or other esoteric scalars,
+; you can use quotes.
+empty_string = ""
 quoted_scalar = "\twow\ttabs!\t"
 
-# Quoted scalars support the following escape sequencess:
+; Quoted scalars support the following escape sequencess:
 escape_sequences
-  = "\\" # '\'
-  = "\"" # '"'
-  = "\t" # tab
-  = "\n" # newline
-  = "\r" # carriage return
-  = "\{1F321}" # 🐱 (or any Unicode codepoint valid in UTF-8)
+  = "\\" ; '\'
+  = "\"" ; '"'
+  = "\t" ; tab
+  = "\n" ; newline
+  = "\r" ; carriage return
+  = "\{1F321}" ; 🐱 (or any Unicode codepoint valid in UTF-8)

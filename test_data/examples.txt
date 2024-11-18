@@ -1,4 +1,4 @@
-c = """asd # comment?
+c = """asd ; comment?
     false
 d = 1.5
 
@@ -11,7 +11,7 @@ a = b
 {"a":"b"}
 
 ===
-# test
+; test
 ---
 {}
 
@@ -28,21 +28,21 @@ a =
 {"\u0000":"\u0000"}
 
 ===
-a =#b
+a =;b
   b = c
 ---
 {"a":{"b":"c"}}
 
 ===
-a = """json #lol
+a = """json ;lol
   {"":""}
 ---
 {"a":"{\"\":\"\"}"}
 
 ===
-a b#c = a#c = b#d # hah
+a b#c = a#c = b;d
 ---
-{"a b#c":"a#c = b#d"}
+{"a b#c":"a#c = b"}
 
 ===
 " \t\r\n\\\"" = oh "wow"
@@ -50,8 +50,8 @@ a b#c = a#c = b#d # hah
 {" \t\r\n\\\"":"oh \"wow\""}
 
 ===
-"hello"#world
-  = "oh yeah"#!
+"hello";world
+  = "oh yeah";!
 ---
 {"hello":["oh yeah"]}
 
@@ -66,22 +66,22 @@ a = """bash
 
   #!/usr/bin/env bash
 
-  echo "hello world"
+  echo "hello world"; exit 1
 
 ---
-{"a":"#!/usr/bin/env bash\n\necho \"hello world\""}
+{"a":"#!/usr/bin/env bash\n\necho \"hello world\"; exit 1"}
 
 ===
 a = """bash
 
   #!/usr/bin/env bash
 
-  echo "hello world"
+  echo "hello world"; exit 1
 
 b = c
 
 ---
-{"a":"#!/usr/bin/env bash\n\necho \"hello world\"","b":"c"}
+{"a":"#!/usr/bin/env bash\n\necho \"hello world\"; exit 1","b":"c"}
 
 ===
 a = b␊c = d␊
@@ -91,16 +91,16 @@ e = f
 
 ===
 a = """ bash_two
-    #
+    ;
 
 ---
-{"a":"#"}
+{"a":";"}
 
 ===
 a
-# configure a
+; configure a
   b = c
- # d = e
+ ; d = e
   f = g
 ---
 {"a":{"b":"c","f":"g"}}
@@ -120,12 +120,12 @@ b = c
 
 ===
 a
-  #
+  ;
 ---
 {"a":null}
 
 ===
-a = # empty
+a = ; empty
 c = ""
 ---
 {"a":null,"c":""}

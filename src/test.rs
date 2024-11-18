@@ -36,7 +36,7 @@ fn section_to_json<'tok>(
     let mut sect_type: Option<SectionType> = None;
     while let Some(result) = parser.next() {
         match result? {
-            Newline(..) | Comment(..) | MultilineIndicator(..) => {}
+            Newline(..) | Comment(..) | MultilineHint(..) => {}
             Indent(..) => {
                 section_to_json(parser, output, &(indent.to_string() + "  "))?;
             }

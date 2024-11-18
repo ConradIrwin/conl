@@ -1,3 +1,9 @@
+1.6.0
+=====
+
+* Switch from # to ; for comments. This allows HTML colors to be used without quotes.
+* Rename `Token::MultilineIndicator` to `Token::MultilineHint`
+
 1.5.0
 =====
 

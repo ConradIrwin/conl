@@ -23,8 +23,8 @@ pub enum Token<'tok> {
     MapKey(usize, &'tok str),
     /// Value contains a single-line value
     Value(usize, &'tok str),
-    /// MultilineIndicator contains the language tag for a multiline value (you can likely skip this token unless building a formatter)
-    MultilineIndicator(usize, &'tok str),
+    /// MultilineHint contains the language tag for a multiline value (you can likely skip this token unless building a formatter)
+    MultilineHint(usize, &'tok str),
     /// MultilineValue contains a multiline value
     MultilineValue(usize, &'tok str, &'tok str),
     /// NoValue indicates that a key or item had no value.
@@ -42,7 +42,7 @@ impl<'tok> Token<'tok> {
             Token::ListItem(lno) => *lno,
             Token::MapKey(lno, _) => *lno,
             Token::Value(lno, _) => *lno,
-            Token::MultilineIndicator(lno, _) => *lno,
+            Token::MultilineHint(lno, _) => *lno,
             Token::MultilineValue(lno, _, _) => *lno,
             Token::NoValue(lno) => *lno,
         }
@@ -59,14 +59,14 @@ impl<'tok> Token<'tok> {
             Token::MapKey(..) => "map key",
             Token::Value(..) => "value",
             Token::NoValue(..) => "no value",
-            Token::MultilineIndicator(..) => "multiline indicator",
+            Token::MultilineHint(..) => "multiline hint",
             Token::MultilineValue(..) => "multiline value",
         }
     }
 
     /// returns the actual value of a token (removing quotes if present)
     /// This is most useful for [Token::MapKey], [Token::Value] and [Token::MultilineValue]; but also
-    /// returns the contents of a [Token::Comment] or [Token::MultilineIndicator] for formatters.
+    /// returns the contents of a [Token::Comment] or [Token::MultilineHint] for formatters.
     /// Other tokens always return Ok(Cow::Borrowed(""))
     pub fn unescape(&self) -> Result<Cow<'tok, str>, SyntaxError> {
         use Token::*;
@@ -176,7 +176,7 @@ impl<'tok> Token<'tok> {
                 Ok(Cow::Owned(content))
             }
             Comment(.., comment) => Ok(Cow::Borrowed(comment)),
-            MultilineIndicator(.., indicator) => Ok(Cow::Borrowed(indicator)),
+            MultilineHint(.., hint) => Ok(Cow::Borrowed(hint)),
             _ => Ok(Cow::Borrowed("")),
         }
     }
@@ -271,24 +271,20 @@ impl<'tok> Tokenizer<'tok> {
     }
 
     fn consume_value(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
-        if let Some(indicator) = rest.strip_prefix(&[b'"', b'"', b'"']) {
-            return self.consume_multiline_indicator(indicator);
+        if let Some(hint) = rest.strip_prefix(&[b'"', b'"', b'"']) {
+            return self.consume_multiline_hint(hint);
         }
 
         let mut quoted = rest.first() == Some(&b'"');
         let mut end = rest.len();
-        let mut was_space = true;
         let mut was_escape = false;
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b'#' && was_space && !quoted) {
+            if is_newline(c) || (c == &b';' && !quoted) {
                 end = i;
                 break;
             }
             if i > 0 && !was_escape && c == &b'"' {
                 quoted = false;
-                was_space = true;
-            } else {
-                was_space = is_whitespace(c);
             }
             was_escape = c == &b'\\'
         }
@@ -301,18 +297,16 @@ impl<'tok> Tokenizer<'tok> {
         Ok(Token::Value(self.lno, value))
     }
 
-    fn consume_multiline_indicator(
-        &mut self,
-        rest: &'tok [u8],
-    ) -> Result<Token<'tok>, SyntaxError> {
-        let mut was_space = true;
+    fn consume_multiline_hint(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = rest.len();
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b'#' && was_space) {
+            if is_newline(c) || (c == &b';') {
                 end = i;
                 break;
             }
-            was_space = is_whitespace(c)
+            if c == &b'"' {
+                return Err(SyntaxError::new(self.lno, "invalid multiline hint"));
+            }
         }
         let (value, rest) = rest.split_at(end);
         self.input = rest;
@@ -322,25 +316,21 @@ impl<'tok> Tokenizer<'tok> {
         let value = str.trim_matches(is_whitespace_char);
 
         self.expect_multiline = true;
-        Ok(Token::MultilineIndicator(self.lno, value))
+        Ok(Token::MultilineHint(self.lno, value))
     }
 
     fn consume_key(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = rest.len();
-        let mut was_space = true;
         let mut was_escape = false;
         let mut quoted = rest.first() == Some(&b'"');
 
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b'#' && was_space && !quoted) || (c == &b'=' && !quoted) {
+            if is_newline(c) || (c == &b';' && !quoted) || (c == &b'=' && !quoted) {
                 end = i;
                 break;
             }
             if i > 0 && !was_escape && c == &b'"' {
                 quoted = false;
-                was_space = true;
-            } else {
-                was_space = is_whitespace(c);
             }
             was_escape = c == &b'\\'
         }
@@ -413,7 +403,7 @@ impl<'tok> Iterator for Tokenizer<'tok> {
             return None;
         };
 
-        if *first == b'#' && !(self.expect_indent && self.expect_multiline) {
+        if *first == b';' && !(self.expect_indent && self.expect_multiline) {
             return Some(self.consume_comment(&rest[1..]));
         }
 
@@ -463,7 +453,7 @@ enum SectionType {
 
 /// parse iterates over a CONL file, returning [Token]s. In the case of an error it will
 /// yield a [SyntaxError] and then stop returning more tokens.
-/// You can likely ignore [Token::Newline], [Token::Comment] and [Token::MultilineIndicator].
+/// You can likely ignore [Token::Newline], [Token::Comment] and [Token::MultilineHint].
 /// The structure of the file is validated, so you can be sure that you'll see pairs of:
 /// * one of [Token::MapKey] or [Token::ListItem]
 /// * one of [Token::Value], [Token::MultilineValue] or [Token::Indent] ... [Token::Outdent]
@@ -478,7 +468,7 @@ pub fn parse(input: &[u8]) -> Parser<'_> {
 pub struct Parser<'tok> {
     tokenizer: Tokenizer<'tok>,
     peek: Option<Option<Token<'tok>>>,
-    multiline_indicator: Option<usize>,
+    multiline_hint: Option<usize>,
     needs_value: Option<usize>,
     errored: bool,
     stack: Vec<Option<SectionType>>,
@@ -488,7 +478,7 @@ impl<'tok> Parser<'tok> {
     fn new(input: &'tok [u8]) -> Self {
         Parser {
             tokenizer: tokenize(input),
-            multiline_indicator: None,
+            multiline_hint: None,
             needs_value: None,
             errored: false,
             stack: vec![None],
@@ -524,7 +514,7 @@ impl<'tok> Iterator for Parser<'tok> {
             _ => {}
         };
 
-        let token = if let Some(lno) = self.multiline_indicator.take() {
+        let token = if let Some(lno) = self.multiline_hint.take() {
             match next {
                 Some(MultilineValue(..)) => next,
                 _ => {
@@ -534,8 +524,8 @@ impl<'tok> Iterator for Parser<'tok> {
             }
         } else if let Some(lno) = self.needs_value.take() {
             match next {
-                Some(MultilineIndicator(..)) => {
-                    self.multiline_indicator = Some(lno);
+                Some(MultilineHint(..)) => {
+                    self.multiline_hint = Some(lno);
                     next
                 }
                 Some(Value(..)) => next,

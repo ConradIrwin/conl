@@ -4,6 +4,9 @@ It supports a JSON-like data model of values, maps and lists; but with a syntax 
 
 Consider this [example file](../example.conl):
 
+<img width="700" alt="Screenshot 2024-11-17 at 23 27 14" src="https://github.com/user-attachments/assets/adb36d3b-b9fe-4c85-857a-db55aff36d2d">
+<img width="700" alt="Screenshot 2024-11-17 at 23 27 48" src="https://github.com/user-attachments/assets/a71c415e-c836-40e4-a52c-f9eb6fef127f">
+
 ## Syntax
 
 The syntax of CONL has been designed with several priorities (in order):

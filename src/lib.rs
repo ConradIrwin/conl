@@ -300,12 +300,9 @@ impl<'tok> Tokenizer<'tok> {
     fn consume_multiline_hint(&mut self, rest: &'tok [u8]) -> Result<Token<'tok>, SyntaxError> {
         let mut end = rest.len();
         for (i, c) in rest.iter().enumerate() {
-            if is_newline(c) || (c == &b';') {
+            if is_newline(c) || c == &b';' {
                 end = i;
                 break;
-            }
-            if c == &b'"' {
-                return Err(SyntaxError::new(self.lno, "invalid multiline hint"));
             }
         }
         let (value, rest) = rest.split_at(end);

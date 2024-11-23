@@ -2,7 +2,7 @@ CONL is a post-minimal, human-centric configuration language.
 
 It is designed as a drop-in replacement for JSON/INI/YAML/TOML/etc... for when you want a file that users are comfortable editing by hand.
 
-Top features:
+Features:
 
 * A JSON-like data model of maps, lists and scalars.
 * An INI-like type system, where type inference is deferred until parse time.
@@ -11,8 +11,8 @@ Top features:
 Design criteria:
 
 * Easy to read. CONL files parse unambiguously to both humans and machines.
-* Easy to edit. No need to spend time balancing brackets, and common operations like commenting out lines never break the file.
-* JSON-iteroperable. You can validate it with a JSON schema if you want.
+* Easy to edit. No need to spend time balancing brackets.
+* JSON-iteroperable. You can validate a CONL document with JSON schema if you want.
 * Easy to parse. Building a CONL parser is a fun afternoon, not a week of deciphering edge-cases.
 
 Consider this [example file](./example.conl):
@@ -41,7 +41,9 @@ Without any special syntax, keys can contain any character except `;`, `=`, `\r`
 key containing spaces = value with = and "quotes"!
 ```
 
-If your value contains newlines (or ;) use multiline syntax. The syntax highlighting hint is optional and is not parsed, but gives you nice highlighting in modern editors.
+If your value contains newlines (or `;`) use multiline syntax. The syntax
+highlighting hint is optional and is not parsed, but gives you nice highlighting
+in modern editors.
 
 ```conl
 init_script = """bash
@@ -50,7 +52,9 @@ init_script = """bash
   echo "hello world";
 ```
 
-In the rare case you need more flexiblity, for example to preserve leading/trailing whitespace, or to represent the empty string, you can use a quoted literal:
+In the rare case you need more flexiblity, for example to preserve
+leading/trailing whitespace, or to represent the presence of the empty string,
+you can use a quoted literal:
 
 ```conl
 "" = " wow\r\nlook at my cat \{1F431}"
@@ -61,8 +65,8 @@ application receives the type it needs without users having to remember the
 syntax.
 ```conl
 enabled = true
-enabled = "true"
-enabled = """
+enabled = "true" ; equivalent to enabled = true
+enabled = """    ; equivalent to enabled = true
    true
 ```
 
@@ -71,7 +75,7 @@ numbers, you can have fields that expect specific units without adding more
 syntactic noise:
 
 ```conl
-max_space = 10GB
+max_space = 10 GB
 timeout = 10s
 country_code = no
 ```
@@ -82,7 +86,8 @@ color = #ff0000 ; pure red
 ```
 
 Any JSON/YAML/TOML document can be converted to CONL, but the reverse (to do it
-propertly) requires a schema to ensure the correct types are generated.
+propertly) requires a schema to ensure the correct type-syntax is generated
+(or you can guess ;).
 
 If you'd like to build your own implementation, [spec.conl](./spec.conl)
 contains a relatively complete specification of the syntax.

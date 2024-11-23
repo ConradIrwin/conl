@@ -1,3 +1,8 @@
+1.6.1
+=====
+
+* Allow " characters in multiline hints
+
 1.6.0
 =====
 

@@ -25,15 +25,17 @@ comment = ";[^\r\n]*"
 after_newline = outdent* indent?
 
 ; A quoted scalar begins with a double quote (U+0022) and ends with the same character. Quoted scalars provide escape sequences for hard to type characters
-quoted_scalar = "/\"([^\\\\\"\\r\\n]|\\\\(\\\\|\"|t|r|n|\\{[09a-fA-F]{1,8}\\}))*\"/"
+quoted_scalar = """
+  "([^\\"\r\n]|\\(\\|"|t|r|n|\{[09a-fA-F]{1,8}\}))*"
+
 ; The escape sequences are:
 escape_sequences
-  \\ = "\\" ; '\'
-  \" = "\"" ; '"'
-  \t = "\t" ; tab
-  \r = "\r" ; carriage return
-  \n = "\n" ; newline
-  \{[09a-fA-F]{1,8}} ; unicode codepoint from U+0000 to U+10FFFF (unpaired surrogates are not allowed).
+  = "\\" ; '\'
+  = "\"" ; '"'
+  = "\t" ; tab
+  = "\r" ; carriage return
+  = "\n" ; newline
+  = \{[0-9a-fA-F]{1,8}\} ; unicode codepoint from U+0000 to U+10FFFF (unpaired surrogates are not allowed).
 
 ; A multiline scalar begins with three double quotes (U+0022) and ends at the
 ; next non-blank line at which the indent level is less than or equual to the

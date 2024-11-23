@@ -1,20 +1,26 @@
-CONL is a post-minimalist, human-centric configuration language.
+CONL is a post-minimal, human-centric configuration language.
 
-It supports a JSON-like data model of values, maps and lists; but with a syntax that ensures common operations like commenting out a line, or adding a new key/value pair always leave the document in a parseable state.
+It is designed as a drop-in replacement for JSON/INI/YAML/TOML/etc... for when you want a file that users are comfortable editing by hand.
 
-Consider this [example file](../example.conl):
+Top features:
+
+* A JSON-like data model of maps, lists and scalars.
+* An INI-like type system, where type inference is deferred until parse time.
+* A (simplified) YAML-like syntax, where indentation defines structure.
+
+Design criteria:
+
+* Easy to read. CONL files parse unambiguously to both humans and machines.
+* Easy to edit. No need to spend time balancing brackets, and common operations like commenting out lines never break the file.
+* JSON-iteroperable. You can validate it with a JSON schema if you want.
+* Easy to parse. Building a CONL parser is a fun afternoon, not a week of deciphering edge-cases.
+
+Consider this [example file](./example.conl):
 
 <img width="700" alt="Screenshot 2024-11-17 at 23 27 14" src="https://github.com/user-attachments/assets/adb36d3b-b9fe-4c85-857a-db55aff36d2d">
 <img width="700" alt="Screenshot 2024-11-17 at 23 27 48" src="https://github.com/user-attachments/assets/a71c415e-c836-40e4-a52c-f9eb6fef127f">
 
 ## Syntax
-
-The syntax of CONL has been designed with several priorities (in order):
-
-1. To be easy to read
-3. To be easy to edit
-2. To be round-trippable to JSON
-4. To be easy to parse
 
 CONL uses indentation for structure. This provides an advantage over JSON in that common operations (like commenting out a line) do not make the document invalid, and an advantage over TOML/INI in that you can construct arbitrary list/map nestings instead of just "tables".
 
@@ -54,8 +60,9 @@ Quoting is not meaningful. CONL uses deferred typing to ensure that the
 application receives the type it needs without users having to remember the
 syntax.
 ```conl
-enabled = "true" ; equivalent to enabled = true
-enabled = """    ; equivalent to enabled = true
+enabled = true
+enabled = "true"
+enabled = """
    true
 ```
 
@@ -74,9 +81,10 @@ CONL uses `;` for comments. This means that common values like HTML colors don't
 color = #ff0000 ; pure red
 ```
 
-Any JSON/YAML/TOML document can be converted to CONL, but the reverse requires a schema to ensure the correct types are generated.
+Any JSON/YAML/TOML document can be converted to CONL, but the reverse (to do it
+propertly) requires a schema to ensure the correct types are generated.
 
-If you'd like to build your own implementation, [spec.conl](../spec.conl)
+If you'd like to build your own implementation, [spec.conl](./spec.conl)
 contains a relatively complete specification of the syntax.
 
 # Why?

@@ -38,7 +38,9 @@ escape_sequences
   \t = "\t" ; tab
   \r = "\r" ; carriage return
   \n = "\n" ; newline
-  "\{[0-9a-fA-F]{1,8}\}" ; any unicode codepoint from U+0000 to U+10FFFF (unpaired surrogates are not allowed).
+  \{XXXX}   ; any unicode scalar value from U+0000 to U+10FFFF
+            ; either uppercase or lowercase hex digits may be used.
+            ; Surrogate code points (U+D800 to U+DFFF) are not allowed.
 
 ; A multiline scalar begins with three double quotes (U+0022) and ends at the
 ; next non-blank line at which the indent level is less than or equual to the

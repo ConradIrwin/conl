@@ -91,7 +91,8 @@ fn test_equivalence() {
     let examples = std::fs::read_to_string("test_data/examples.txt")
         .unwrap()
         .replace("␉", "\t")
-        .replace("␊", "\r");
+        .replace("␊", "\r")
+        .replace("␠", " ");
 
     for example in examples.split("\n===\n") {
         let (input, expected) = example.split_once("\n---\n").unwrap();
@@ -112,7 +113,8 @@ fn test_errors() {
     let examples = std::fs::read_to_string("test_data/errors.txt")
         .unwrap()
         .replace("␉", "\t")
-        .replace("␊", "\r");
+        .replace("␊", "\r")
+        .replace("␠", " ");
 
     for example in examples.split("\n===\n") {
         let (input, expected) = example.split_once("\n---\n").unwrap();

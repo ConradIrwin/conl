@@ -128,3 +128,10 @@ a
 =
 ---
 1: characters after quotes
+
+===
+a = """
+␠␠
+b = c
+---
+1: missing value

@@ -296,7 +296,7 @@ impl<'tok> Tokenizer<'tok> {
             if i > 0 && !was_escape && c == &b'"' {
                 quoted = false;
             }
-            was_escape = c == &b'\\'
+            was_escape = c == &b'\\' && !was_escape
         }
 
         let (value, rest) = rest.split_at(end);
@@ -343,7 +343,7 @@ impl<'tok> Tokenizer<'tok> {
             if i > 0 && !was_escape && c == &b'"' {
                 quoted = false;
             }
-            was_escape = c == &b'\\'
+            was_escape = c == &b'\\' && !was_escape
         }
 
         let (key, rest) = rest.split_at(end);
@@ -437,6 +437,7 @@ impl<'tok> Iterator for Tokenizer<'tok> {
                 } else {
                     self.indent_stack.pop();
                     self.current_indent = Some(indent);
+                    self.input = rest;
                     self.expect_indent = true;
                     return Some(Ok(Token::Outdent(self.lno)));
                 }

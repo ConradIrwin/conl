@@ -106,12 +106,22 @@ impl<'tok> Token<'tok> {
                         't' => output.push('\t'),
                         '{' => {
                             let mut found = String::new();
+                            let mut closed_brace = false;
                             loop {
                                 match chars.next() {
-                                    None => break 'outer,
-                                    Some('}') => break,
+                                    None | Some('"') => break,
+                                    Some('}') => {
+                                        closed_brace = true;
+                                        break;
+                                    }
                                     Some(c) => found.push(c),
                                 }
+                            }
+                            if !closed_brace {
+                                return Err(SyntaxError {
+                                    lno: *lno,
+                                    msg: format!("invalid escape code: \\{{{}", found),
+                                });
                             }
                             let Some(ch) = u32::from_str_radix(&found, 16)
                                 .ok()
@@ -522,7 +532,7 @@ impl<'tok> Iterator for Parser<'tok> {
                 Some(MultilineValue(..)) => next,
                 _ => {
                     self.errored = true;
-                    return Some(Err(SyntaxError::new(lno, "missing value")));
+                    return Some(Err(SyntaxError::new(lno, "missing multiline value")));
                 }
             }
         } else if let Some(lno) = self.needs_value.take() {
@@ -547,7 +557,7 @@ impl<'tok> Iterator for Parser<'tok> {
                     let last = self.stack.last_mut().unwrap();
                     if last.get_or_insert(SectionType::Map) == &SectionType::List {
                         self.errored = true;
-                        return Some(Err(SyntaxError::new(lno, "expected list item")));
+                        return Some(Err(SyntaxError::new(lno, "unexpected map key")));
                     }
                     self.needs_value = Some(lno);
                     Some(MapKey(lno, value))
@@ -556,7 +566,7 @@ impl<'tok> Iterator for Parser<'tok> {
                     let last = self.stack.last_mut().unwrap();
                     if last.get_or_insert(SectionType::List) == &SectionType::Map {
                         self.errored = true;
-                        return Some(Err(SyntaxError::new(lno, "expected map key")));
+                        return Some(Err(SyntaxError::new(lno, "unexpected list item")));
                     }
                     self.needs_value = Some(lno);
                     Some(ListItem(lno))

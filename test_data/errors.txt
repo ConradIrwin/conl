@@ -30,12 +30,7 @@ a = "o
 ===
 a = "\{"
 ---
-1: invalid escape code: end of string
-
-===
-a = "\{201C"
----
-1: invalid escape code: end of string
+1: invalid escape code: \{
 
 ===
 a = "\{g}"
@@ -71,7 +66,7 @@ b = """bash
 ===
 b = """ bash
 ---
-1: missing value
+1: missing multiline value
 
 ===
 b = "\"\ \ash"
@@ -99,28 +94,33 @@ b = "\{D800}"
 1: invalid escape code: \{}
 
 ===
+a = "\{201C"
+---
+1: invalid escape code: \{201C
+
+===
 b = a
 = b
 ---
-2: expected map key
+2: unexpected list item
 
 ===
 = a
 a = b
 ---
-2: expected list item
+2: unexpected map key
 
 ===
 a="""
 a
 ---
-1: missing value
+1: missing multiline value
 
 ===
 ="""
 =
 ---
-1: missing value
+1: missing multiline value
 
 ===
 = """"
@@ -134,4 +134,4 @@ a = """
 ␠␠
 b = c
 ---
-1: missing value
+1: missing multiline value

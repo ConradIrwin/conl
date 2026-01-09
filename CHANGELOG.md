@@ -1,3 +1,9 @@
+1.7.0
+=====
+
+* Fix numerous small parse discrepencies between this and the Go implementation.
+* Update error messages to match the Go implementation.
+
 1.6.1
 =====
 

@@ -140,3 +140,9 @@ a = """bash "test"
   hello
 ---
 {"a":"hello"}
+
+===
+a = """
+  hello
+---
+{"a":"hello"}

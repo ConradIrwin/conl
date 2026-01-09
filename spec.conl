@@ -51,11 +51,11 @@ escape_sequences
 ; preserved.
 ; When parsing a multiline scalar:
 ; * leading and trailing whitespace and blanks are removed.
-; * carraige returns are normalized so each line ends with just \n.
+; * carriage returns are normalized so each line ends with just \n.
 ; * any blank lines that contain less indent than the first line of the value are treated as \n.
 ; * The ; character is treated as a literal semi-colon (not a comment).
 multiline_scalar =  """
-  """ blank? multiline_hint blank? comment? newline indent (.*) outdent
+  """ blank* multiline_hint? blank* comment? newline indent (.*) outdent
 multiline_hint =  "/[^;\r\n \t\"]([^\r\n;]*[^;\r\n \t])?/"
 
 ; A map key can contain any character except ;, =, \r, \n; and cannot start with

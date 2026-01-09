@@ -20,7 +20,7 @@
   alpha
  beta
 ---
-3: expected list item
+3: unexpected indent
 
 ===
 a = "o

@@ -414,7 +414,9 @@ impl<'tok> Iterator for Tokenizer<'tok> {
             if self.expect_multiline {
                 self.expect_multiline = false;
                 if indent.len() > current.len() && indent.starts_with(current) {
-                    return Some(self.consume_multiline(indent));
+                    let result = self.consume_multiline(indent);
+                    self.expect_indent = true;
+                    return Some(result);
                 }
             }
             if indent != current {

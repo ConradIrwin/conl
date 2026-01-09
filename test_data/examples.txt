@@ -146,3 +146,11 @@ a = """
   hello
 ---
 {"a":"hello"}
+
+===
+a
+  b = """
+    content
+c = d
+---
+{"a":{"b":"content"},"c":"d"}

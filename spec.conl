@@ -29,7 +29,7 @@ after_newline = outdent* indent?
 ; Note that (unlike JSON) ASCII control characters are permitted
 ; in both quoted and unquoted scalars.
 quoted_scalar = """
-  "([^\\"\r\n]|\\(\\|"|t|r|n|\{[09a-fA-F]{1,8}\}))*"
+  "([^\\"\r\n]|\\(\\|"|t|r|n|\{[0-9a-fA-F]{1,8}\}))*"
 
 ; The escape sequences are:
 escape_sequences

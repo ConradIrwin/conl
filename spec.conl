@@ -43,9 +43,10 @@ escape_sequences
             ; Surrogate code points (U+D800 to U+DFFF) are not allowed.
 
 ; A multiline scalar begins with three double quotes (U+0022) and ends at the
-; next non-blank line at which the indent level is less than or equual to the
+; next non-blank line at which the indent level is less than or equal to the
 ; current one. They may optionally contain a hint for syntax highlighters, but
-; this is not part of the value. The hint may contain any character except ;.
+; this is not part of the value. The hint may not start with a " (to avoid
+; ambiguity with """"), but quotes are allowed elsewhere in the hint.
 ; As with values leading/trailing blanks are ignored but internal blanks are
 ; preserved.
 ; When parsing a multiline scalar:
@@ -55,7 +56,7 @@ escape_sequences
 ; * The ; character is treated as a literal semi-colon (not a comment).
 multiline_scalar =  """
   """ blank? multiline_hint blank? comment? newline indent (.*) outdent
-multiline_hint =  "/[^;\r\n \t]([^\r\n;]*[^;\r\n \t])?/"
+multiline_hint =  "/[^;\r\n \t\"]([^\r\n;]*[^;\r\n \t])?/"
 
 ; A map key can contain any character except ;, =, \r, \n; and cannot start with
 ; a blank or quote, or end with a blank. It can also be a quoted scalar:

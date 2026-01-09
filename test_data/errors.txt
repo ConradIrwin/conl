@@ -16,12 +16,24 @@
 3: unexpected indent
 
 ===
+= """
+  alpha
+ beta
+---
+3: expected list item
+
+===
 a = "o
 ---
 1: unclosed quotes
 
 ===
 a = "\{"
+---
+1: invalid escape code: end of string
+
+===
+a = "\{201C"
 ---
 1: invalid escape code: end of string
 
@@ -97,3 +109,22 @@ b = a
 a = b
 ---
 2: expected list item
+
+===
+a="""
+a
+---
+1: missing value
+
+===
+="""
+=
+---
+1: missing value
+
+===
+= """"
+  a
+=
+---
+1: characters after quotes
